@@ -1,0 +1,28 @@
+= CloudBees action: Scan with SonarQube bundled
+
+If you do not have a centralized SonarQube already installed, use this action to scan a Git repository with the SonarQube static application security testing (SAST) scanner, which detects security flaws and provides suggested code fixes.
+SonarQube scan results are displayed in CloudBees platform analytics dashboards, but not in SonarQube reports, as the SonarQube instance is headless/ephemeral.
+
+NOTE: If you already are running a centralized SonarQube, use the link:https://github.com/cloudbees-io/sonarqube-sast-scan-code[Scan with SonarQube action] instead.
+
+== Usage example
+
+In your YAML file, add:
+
+[source,yaml]
+----
+
+      - name: Scan with SonarQube bundled
+        uses: cloudbees-io/sonarqube-bundled-sast-scan-code@v1
+
+----
+
+== License
+
+This code is made available under the 
+link:https://opensource.org/license/mit/[MIT license].
+
+== References
+
+* Learn more about link:https://docs.cloudbees.com/docs/cloudbees-saas-platform-actions/latest/[using actions in CloudBees workflows].
+* Learn about link:https://docs.cloudbees.com/docs/cloudbees-saas-platform/latest/[the CloudBees platform].
