@@ -21,8 +21,4 @@ runs:
         echo "RUN ID: ${{ cloudbees.run_id }}"
         echo "Job ID: ${{ job.id }}"
         echo "Step ID: ${{ step.internal.id }}"
-        cd $CLOUDBEES_WORKSPACE
-        if test -f go.mod; then
-          go test ./... -coverprofile coverprofile.out
-        fi
         /bin/bash -c "/usr/local/bin/scan.sh"
