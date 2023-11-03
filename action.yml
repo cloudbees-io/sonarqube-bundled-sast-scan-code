@@ -6,7 +6,7 @@ runs:
   steps:
     - id: sonarqube
       name: sonarqube-bundled
-      uses: docker://registry.saas-dev.beescloud.com/staging/sonarscanner-actions:main-24d7c0b6a6b9a8a04995fc6eebcde2480ea7d9bc
+      uses: docker://registry.saas-dev.beescloud.com/staging/sonarscanner-actions:main-52f49e484d68cffeb2f11a590923dd9fdc616c1b
       shell: bash
       env:
         RUN_ID: ${{ cloudbees.run_id }}
