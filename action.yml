@@ -20,9 +20,9 @@ inputs:
 runs:
   using: composite
   steps:
-      # - id: git-credentials
-      #   name: Setup git credentials
-      #   uses: cloudbees-io/configure-git-global-credentials@v1
+      - id: git-credentials
+        name: Setup git credentials
+        uses: https://github.com/cloudbees-io/configure-git-global-credentials@v1
       - id: preprocessing
         name: validating the inputs
         uses: docker://golang:latest
