@@ -91,7 +91,7 @@ runs:
               echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
               echo "sonar.language=java" >> sonar-project.properties
               echo "sonar.java.binaries=target/**" >> sonar-project.properties
-              echo "sonar.exclusions=**/site/**,**/test/**,target/generated-*/**" >> sonar-project.properties
+              echo "sonar.exclusions=**/jacoco/**,**/test/**,target/generated-*/**" >> sonar-project.properties
               cat sonar-project.properties
               mvn clean package
               mvn test
@@ -106,7 +106,7 @@ runs:
             echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
             echo "sonar.language=java" >> sonar-project.properties
             echo "sonar.java.binaries=./**" >> sonar-project.properties
-            echo "sonar.exclusions=**/test/**,target/generated-*/**" >> sonar-project.properties
+            echo "sonar.exclusions=**/jacoco/**,**/test/**,target/generated-*/**" >> sonar-project.properties
             echo "sonar.coverage.jacoco.xmlReportPaths=${COVER}" >> sonar-project.properties
             cat sonar-project.properties
           fi
