@@ -26,10 +26,14 @@ runs:
       - id: preprocessing
         name: validating the inputs
         uses: docker://golang:latest
-        if: ${{ inputs.run-unit-test == 'false' }} && ${{ inputs.cover-file-name == '' }}
+        if: ${{ inputs.run-unit-test == 'false' }} 
         run: |
-          echo "Cover-file-name is mandatory when run-unit-test is false. Please provide the path to the coverage file in the 'cover-file-name' input. Exiting..."
-          ${{ inputs.language }} = 'false'
+          if [ ${{ inputs.cover-file-name }} ='' ]
+          then
+            echo "Since The Coverage File Path Is Not Provided, Running Sonarqube Without Coverage Data..."
+          else
+            echo "Running Sonarqube With Coverage Data..."
+          fi
       - id: golang-unit-test
         name: Golang unit test and coverage
         uses: docker://golang:latest
@@ -87,7 +91,7 @@ runs:
               echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
               echo "sonar.language=java" >> sonar-project.properties
               echo "sonar.java.binaries=target/**" >> sonar-project.properties
-              echo "sonar.exclusions=**/test/**,target/generated-*/**" >> sonar-project.properties
+              echo "sonar.exclusions=**/site/**,**/test/**,target/generated-*/**" >> sonar-project.properties
               cat sonar-project.properties
               mvn clean package
               mvn test
@@ -127,7 +131,7 @@ runs:
               npx -y jest --coverage
               echo "Creating SonarQube properties file for Jest..."
               echo "sonar.test.inclusions=src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
-              echo "sonar.exclusions=src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
+              echo "sonar.exclusions=coverage/**,src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
               echo "sonar.javascript.lcov.reportPaths=${COVER}" >> sonar-project.properties
               cat sonar-project.properties
             elif grep -qi '"mocha"' package.json; then
@@ -139,7 +143,7 @@ runs:
               npx -y nyc report --reporter=text-lcov > COVER
               echo "Creating SonarQube properties file for Mocha..."
               echo "sonar.test.inclusions=src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
-              echo "sonar.exclusions=src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
+              echo "sonar.exclusions=./coverprofile.lcov,src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
               echo "sonar.javascript.lcov.reportPaths=${COVER}" >> sonar-project.properties
               cat sonar-project.properties
             else
@@ -148,7 +152,7 @@ runs:
           else
             COVER="${{ inputs.cover-file-name }}"
             echo "sonar.test.inclusions=src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
-            echo "sonar.exclusions=src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties  
+            echo "sonar.exclusions=./lcov.info,coverage/**,src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties  
             echo "sonar.javascript.lcov.reportPaths=${COVER}" >> sonar-project.properties
             cat sonar-project.properties
           fi
@@ -210,7 +214,38 @@ runs:
           fi
           echo "Creating SonarQube properties file for Python - unittest..."
           echo "sonar.python.coverage.reportPaths=${COVER}" >> sonar-project.properties
-          cat sonar-project.properties           
+          cat sonar-project.properties  
+      - id: php-unit-test
+        name: PHP unit test and coverage
+        uses: docker://public.ecr.aws/riq-agent/riqtools:php-11
+        kind: test
+        if: ${{ inputs.language == 'LANGUAGE_PHP' }} || ${{ inputs.language == 'PHP' }}
+        run: |
+          COVER="coverage.xml"
+          if [ ${{ inputs.run-unit-test }} = 'true' ]
+          then
+            export COMPOSER_ALLOW_SUPERUSER=1
+            composer -v
+            php -v
+            echo "Creating SonarQube properties file for Java..."
+            echo "sonar.tests=tests" >> sonar-project.properties
+            echo "sonar.language=php" >> sonar-project.properties
+            echo "sonar.php.coverage.reportPaths=${COVER}" >> sonar-project.properties
+            echo "sonar.sources=src" >> sonar-project.properties
+            echo "sonar.exclusions=tests/**,target/generated-*/**" >> sonar-project.properties
+            cat sonar-project.properties
+            composer update --no-ansi --no-interaction --no-progress
+            php -d xdebug.mode=coverage vendor/bin/phpunit  --coverage-clover 'coverage.xml'
+          else
+            COVER="${{ inputs.cover-file-name }}"
+            echo "Creating SonarQube properties file for Java..."
+            echo "sonar.tests=tests" >> sonar-project.properties
+            echo "sonar.language=php" >> sonar-project.properties
+            echo "sonar.php.coverage.reportPaths=${COVER}" >> sonar-project.properties
+            echo "sonar.sources=src" >> sonar-project.properties
+            echo "sonar.exclusions=tests/**,target/generated-*/**" >> sonar-project.properties
+            cat sonar-project.properties
+          fi
       - id: sonarqube
         name: sonarqube        
         uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-f2c65e317c97eb43dfb15715a37ed701dd1ab6c1
