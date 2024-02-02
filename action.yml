@@ -248,7 +248,7 @@ runs:
           fi
       - id: sonarqube
         name: sonarqube        
-        uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-f2c65e317c97eb43dfb15715a37ed701dd1ab6c1
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-51f4b272bb6de52f3971f230ab8b7bab33b16b08
         shell: bash
         env:
           RUN_ID: ${{ cloudbees.run_id }}
