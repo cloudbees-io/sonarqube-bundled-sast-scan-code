@@ -19,11 +19,15 @@ NOTE: If you already are running a centralized SonarQube, use the link:https://g
 | Required?
 | Description
 
-| `run-unit-test`
-| Boolean
-| Yes
-| Whether unit tests should be run.
-Default is `false`.
+| `sonar-exclusion`
+| String
+| No
+| SonarQube Exclusion pattern to exclude matching files.
+
+| `sonar-inclusion`
+| String
+| No
+| SonarQube Inclusion pattern to include matching files.
 
 | `cover-file-name`
 | String
