@@ -20,232 +20,129 @@ inputs:
 runs:
   using: composite
   steps:
-      # - id: git-credentials
-      #   name: Setup git credentials
-      #   uses: https://github.com/cloudbees-io/configure-git-global-credentials@v1
-      # - id: preprocessing
-      #   name: validating the inputs
-      #   uses: docker://golang:latest
-      #   if: ${{ inputs.run-unit-test == 'false' }} 
-      #   run: |
-      #     if [ ${{ inputs.cover-file-name }} ='' ]
-      #     then
-      #       echo "Since The Coverage File Path Is Not Provided, Running Sonarqube Without Coverage Data..."
-      #     else
-      #       echo "Running Sonarqube With Coverage Data..."
-      #     fi
-      # - id: golang-unit-test
-      #   name: Golang unit test and coverage
-      #   uses: docker://golang:latest
-      #   kind: test
-      #   if: ${{ inputs.language == 'LANGUAGE_GOLANG' }} || ${{ inputs.language == 'GOLANG' }} || ${{ inputs.language == 'GO' }}
-      #   run: |
-      #     set -eo pipefail
-      #     echo "__________________ SETUP ENVIRONMENT __________________"
-      #     COVER="coverprofile.out"
-      #     if [ ${{ inputs.run-unit-test }} = 'false' ]
-      #     then
-      #       COVER="${{ inputs.cover-file-name }}"
-      #     fi
-      #     export PATH="${PATH}:${GOPATH}/bin"
-      #     export GOCOVERDIR="."
-      #     TESTUTIL="github.com/calculi-corp/grpc-testutil/creds"
-      #     if [ ${{ inputs.run-unit-test }} = 'true' ]
-      #     then
-      #       echo "__________________ INSTALL TOOLS __________________"
-      #       go install github.com/onsi/ginkgo/v2/ginkgo@latest
-      #       go install github.com/jstemmer/go-junit-report@latest
-      #       go install -v github.com/axw/gocov/gocov@latest
-      #       go install -v github.com/AlekSi/gocov-xml@latest
-      #       echo "__________________ VERSION INFO __________________"
-      #       echo "Go version: $(go version)"
-      #       echo "Ginkgo version: $(ginkgo version)"
-      #       echo "__________________ GET TEST CREDENTIALS __________________"
-      #       GO111MODULE=off go get "${TESTUTIL}" || true
-      #       echo "__________________ TEST __________________"
-      #       ginkgo -timeout=15m -coverprofile "${COVER}" -r -v -skip-package=pb,test,vendor,mock | tee ./test.log
-      #       cat  ./test.log | go-junit-report >./test.xml
-      #       gocov convert "${COVER}" | gocov-xml > ./coverage.xml
-      #       echo "__________________ OUTPUTS __________________"
-      #       echo "NOTICE: test.log (go test), coverprofile.out (gocov), test.xml (JUnit), coverage.xml (Cobertura) are availabe in the workspace."
-      #     fi
-      #     echo "sonar.exclusions=cache-data/**,build/**,test/**,**/*_test.go,**/test*/**,**/mock/**,*.test.js" >> sonar-project.properties
-      #     echo "sonar.go.coverage.reportPaths=${COVER}" >> sonar-project.properties
-      #     cat sonar-project.properties
-      # - id: java-unit-test
-      #   name: Java unit test and coverage
-      #   uses: docker://maven:3.8.7-openjdk-18-slim
-      #   if: ${{ inputs.language == 'LANGUAGE_JAVA' }} || ${{ inputs.language == 'JAVA' }}
-      #   run: |
-      #     COVER="target/site/jacoco/jacoco.xml"
-      #     if [ ${{ inputs.run-unit-test }} = 'true' ]
-      #     then
-      #       if test -f pom.xml; then
-      #         insertLine=$(( $(grep -n "<plugins>" pom.xml | cut -f1 -d: | head -1) + 1 ))
-      #         sed -i -e "$insertLine"' i\''\n''<plugin><groupId>org.jacoco</groupId><artifactId>jacoco-maven-plugin</artifactId><version>0.8.5</version><executions><execution><goals><goal>prepare-agent</goal></goals></execution><execution><id>report</id><phase>test</phase><goals><goal>report</goal></goals></execution></executions></plugin>''\n' pom.xml
-      #         insertLine=$(( $(grep -n "<dependencies>" pom.xml | cut -f1 -d: | head -1) + 1 ))
-      #         sed -i -e "$insertLine"' i\''\n''<dependency><groupId>org.jacoco</groupId><artifactId>jacoco-maven-plugin</artifactId><version>0.8.5</version></dependency>''\n' pom.xml
-      #         echo "Creating SonarQube properties file for Java..."
-      #         echo "sonar.tests=src/test" >> sonar-project.properties
-      #         echo "sonar.sources=src/main" >> sonar-project.properties
-      #         echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
-      #         echo "sonar.language=java" >> sonar-project.properties
-      #         echo "sonar.java.binaries=target/**" >> sonar-project.properties
-      #         echo "sonar.exclusions=**/jacoco/**,**/test/**,target/generated-*/**" >> sonar-project.properties
-      #         cat sonar-project.properties
-      #         mvn clean package
-      #         mvn test
-      #       else
-      #         echo "Currently supporting maeven in Java repositories, Runnning Sonarqube without coverage data..."
-      #       fi
-      #     else
-      #       COVER="${{ inputs.cover-file-name }}"
-      #       echo "Creating SonarQube properties file for Java..."
-      #       echo "sonar.tests=src/test" >> sonar-project.properties
-      #       echo "sonar.sources=src/main" >> sonar-project.properties
-      #       echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
-      #       echo "sonar.language=java" >> sonar-project.properties
-      #       echo "sonar.java.binaries=./**" >> sonar-project.properties
-      #       echo "sonar.exclusions=**/jacoco/**,**/test/**,target/generated-*/**" >> sonar-project.properties
-      #       echo "sonar.coverage.jacoco.xmlReportPaths=${COVER}" >> sonar-project.properties
-      #       cat sonar-project.properties
-      #     fi
-      # - id: javascript-unit-test
-      #   name: Javascript unit test and coverage
-      #   uses: docker://node:latest
-      #   kind: test
-      #   if: ${{ inputs.language == 'LANGUAGE_JAVASCRIPT' }} || ${{ inputs.language == 'JAVASCRIPT' }} || ${{ inputs.language == 'JS' }}
-      #   run: |
-      #     set -eo pipefail
-      #     current_directory=$(pwd)
-      #     echo "Current directory is: $current_directory"
-      #     #!/bin/bash
-      #     if [ ${{ inputs.run-unit-test }} = 'true' ]
-      #     then
-      #       # Check if "jest" is present in package.json
-      #       if grep -qi '"jest"' package.json; then
-      #         echo "JEST detected"
-      #         COVER="./coverage/lcov.info"
-      #         npm install
-      #         npm install jest --save-dev
-      #         npx -y jest --coverage
-      #         echo "Creating SonarQube properties file for Jest..."
-      #         echo "sonar.test.inclusions=src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
-      #         echo "sonar.exclusions=coverage/**,src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
-      #         echo "sonar.javascript.lcov.reportPaths=${COVER}" >> sonar-project.properties
-      #         cat sonar-project.properties
-      #       elif grep -qi '"mocha"' package.json; then
-      #         echo "MOCHA detected"
-      #         COVER="coverprofile.lcov"
-      #         npm install
-      #         npm install nyc --save-dev
-      #         npx nyc npm test -- --watchAll=false
-      #         npx -y nyc report --reporter=text-lcov > COVER
-      #         echo "Creating SonarQube properties file for Mocha..."
-      #         echo "sonar.test.inclusions=src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
-      #         echo "sonar.exclusions=./coverprofile.lcov,src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
-      #         echo "sonar.javascript.lcov.reportPaths=${COVER}" >> sonar-project.properties
-      #         cat sonar-project.properties
-      #       else
-      #         echo "Currently supporting Jest and Mocha test frameworks in JavaScript repositories, Runnning Sonarqube without coverage data..."
-      #       fi
-      #     else
-      #       COVER="${{ inputs.cover-file-name }}"
-      #       echo "sonar.test.inclusions=src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties
-      #       echo "sonar.exclusions=./lcov.info,coverage/**,src/**/*.spec.js,src/**/*.spec.jsx,src/**/*.test.js,src/**/*.test.jsx,*.test.js,*.test.jsx,*.spec.js,*.spec.jsx,**/*.test.js,**/*.test.jsx,**/*.spec.js,**/*.spec.jsx" >> sonar-project.properties  
-      #       echo "sonar.javascript.lcov.reportPaths=${COVER}" >> sonar-project.properties
-      #       cat sonar-project.properties
-      #     fi
-      # - id: python-unit-test
-      #   name: Python unit test and coverage
-      #   uses: docker://python:latest
-      #   kind: test
-      #   if: ${{ inputs.language == 'LANGUAGE_PYTHON' }} || ${{ inputs.language == 'PYTHON' }}
-      #   run: |
-      #     set -eo pipefail
-      #     current_directory=$(pwd)
-      #     echo "Current directory is: $current_directory"
-      #     COVER="coverage.xml"
-      #     if [ ${{ inputs.run-unit-test }} = 'false' ]
-      #     then
-      #       COVER="${{ inputs.cover-file-name }}"
-      #     fi
-      #     ## genric version check
-      #     python --version
-      #     pip --version
-      #     pip install --upgrade pip
-      #     if [ ${{ inputs.run-unit-test }} = 'true' ]
-      #     then
-      #       # Identify test files
-      #       test_suites=$(find . -type f -name '*test*.py')
-      #       if [ -n "$test_suites" ]; then
-      #         # Flag for unittest framework
-      #         unittest_flag=false
-      #         # Flag for pytest framework
-      #         pytest_flag=false
-      #         # Check for the presence of any string in test files (case-insensitive)
-      #         for file in $test_suites; do
-      #           if grep -qie "import unittest" -e "unittest.TestCase" -e "unittest" "$file"; then
-      #             echo "Found at least one unittest framework string in $file"
-      #             unittest_flag=true
-      #             break
-      #           fi
-      #           if grep -qie "import pytest" -e "unittest.TestCase" -e "unittest" "$file"; then
-      #             echo "Found at least one pytest framework string in $file"
-      #             pytest_flag=true
-      #             break
-      #           fi          
-      #         done
-      #       else
-      #         echo "No test files identified. Runnning Sonarqube without coverage data..."  
-      #       fi
-      #       # Execute test suites with matching framework
-      #       if [ "$unittest_flag" = true ] || [ "$pytest_flag" = true ]; then
-      #         echo "Test framework detected"
-      #         ## unittest dependency installation
-      #         pip3 install coverage
-      #         ## pytest dependency installation
-      #         pip install pytest pytest-cov
-      #         ## pytest framework
-      #         python -m pytest --cov . --cov-report xml
-      #       else
-      #         echo "Currently supporting unittest and pytest UT frameworks in Python repositories, Runnning Sonarqube without coverage data..."
-      #       fi
-      #     fi
-      #     echo "Creating SonarQube properties file for Python - unittest..."
-      #     echo "sonar.python.coverage.reportPaths=${COVER}" >> sonar-project.properties
-      #     cat sonar-project.properties  
-      # - id: php-unit-test
-      #   name: PHP unit test and coverage
-      #   uses: docker://public.ecr.aws/riq-agent/riqtools:php-11
-      #   kind: test
-      #   if: ${{ inputs.language == 'LANGUAGE_PHP' }} || ${{ inputs.language == 'PHP' }}
-      #   run: |
-      #     COVER="coverage.xml"
-      #     if [ ${{ inputs.run-unit-test }} = 'true' ]
-      #     then
-      #       export COMPOSER_ALLOW_SUPERUSER=1
-      #       composer -v
-      #       php -v
-      #       echo "Creating SonarQube properties file for Java..."
-      #       echo "sonar.tests=tests" >> sonar-project.properties
-      #       echo "sonar.language=php" >> sonar-project.properties
-      #       echo "sonar.php.coverage.reportPaths=${COVER}" >> sonar-project.properties
-      #       echo "sonar.sources=src" >> sonar-project.properties
-      #       echo "sonar.exclusions=tests/**,target/generated-*/**" >> sonar-project.properties
-      #       cat sonar-project.properties
-      #       composer update --no-ansi --no-interaction --no-progress
-      #       php -d xdebug.mode=coverage vendor/bin/phpunit  --coverage-clover 'coverage.xml'
-      #     else
-      #       COVER="${{ inputs.cover-file-name }}"
-      #       echo "Creating SonarQube properties file for Java..."
-      #       echo "sonar.tests=tests" >> sonar-project.properties
-      #       echo "sonar.language=php" >> sonar-project.properties
-      #       echo "sonar.php.coverage.reportPaths=${COVER}" >> sonar-project.properties
-      #       echo "sonar.sources=src" >> sonar-project.properties
-      #       echo "sonar.exclusions=tests/**,target/generated-*/**" >> sonar-project.properties
-      #       cat sonar-project.properties
-      #     fi
+      - id: git-credentials
+        name: Setup git credentials.
+        uses: https://github.com/cloudbees-io/configure-git-global-credentials@v1
+      - id: preprocessing
+        name: validating the inputs
+        uses: docker://alpine:latest
+        run: |
+          COVER="${{ inputs.cover-file-name }}"
+          if ! test -f ${COVER} ;then
+            echo "Unable to locate Coverage file in Cloudbees_Workspace, Running Sonarqube Without Coverage Data..."
+          fi
+      - id: golang-unit-test
+        name: Golang unit test and coverage
+        uses: docker://alpine:latest
+        kind: test
+        if: ${{ inputs.language == 'LANGUAGE_GOLANG' }} || ${{ inputs.language == 'GOLANG' }} || ${{ inputs.language == 'GO' }} 
+        run: |
+          if ! [ ${{ inputs.sonar-inclusion }} ='' ]
+          then
+            INCLUSION="${{ inputs.sonar-inclusion }}"
+            echo "sonar.inclusions=${INCLUSION}" >> sonar-project.properties
+          fi
+          if ! [ ${{ inputs.sonar-exclusion }} ='' ]
+          then
+            EXCLUSION="${{ inputs.sonar-exclusion }}"
+            echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties
+          fi
+          if ! [ ${{ inputs.cover-file-name }} ='' ]
+          then
+            COVER="${{ inputs.cover-file-name }}"
+            echo "sonar.go.coverage.reportPaths=${COVER}" >> sonar-project.properties
+          fi
+          cat sonar-project.properties
+      - id: java-unit-test
+        name: Java unit test and coverage
+        uses: docker://alpine:latest
+        if: ${{ inputs.language == 'LANGUAGE_JAVA' }} || ${{ inputs.language == 'JAVA' }}
+        run: |
+          echo "sonar.language=java" >> sonar-project.properties
+          echo "sonar.java.binaries=./**" >> sonar-project.properties
+          if ! [ ${{ inputs.sonar-inclusion }} ='' ]
+          then
+            INCLUSION="${{ inputs.sonar-inclusion }}"
+            echo "sonar.inclusions=${INCLUSION}" >> sonar-project.properties
+          fi
+          if ! [ ${{ inputs.sonar-exclusion }} ='' ]
+          then
+            EXCLUSION="${{ inputs.sonar-exclusion }}"
+            echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties
+          fi
+          if ! [ ${{ inputs.cover-file-name }} ='' ]
+          then
+            COVER="${{ inputs.cover-file-name }}"
+            echo "sonar.coverage.jacoco.xmlReportPaths=${COVER}" >> sonar-project.properties
+          fi
+          cat sonar-project.properties
+      - id: javascript-unit-test
+        name: Javascript unit test and coverage
+        uses: docker://alpine:latest
+        kind: test
+        if: ${{ inputs.language == 'LANGUAGE_JAVASCRIPT' }} || ${{ inputs.language == 'JAVASCRIPT' }} || ${{ inputs.language == 'JS' }}
+        run: |
+          if ! [ ${{ inputs.sonar-inclusion }} ='' ]
+          then
+            INCLUSION="${{ inputs.sonar-inclusion }}"
+            echo "sonar.test.inclusions=${INCLUSION}" >> sonar-project.properties
+          fi
+          if ! [ ${{ inputs.sonar-exclusion }} ='' ]
+          then
+            EXCLUSION="${{ inputs.sonar-exclusion }}"
+            echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties  
+          fi
+          if ! [ ${{ inputs.cover-file-name }} ='' ]
+          then
+            COVER="${{ inputs.cover-file-name }}"
+            echo "sonar.javascript.lcov.reportPaths=${COVER}" >> sonar-project.properties
+          fi
+          cat sonar-project.properties  
+      - id: python-unit-test
+        name: Python unit test and coverage
+        uses: docker://alpine:latest
+        kind: test
+        if: ${{ inputs.language == 'LANGUAGE_PYTHON' }} || ${{ inputs.language == 'PYTHON' }}
+        run: |
+          if ! [ ${{ inputs.sonar-inclusion }} ='' ]
+          then
+            INCLUSION="${{ inputs.sonar-inclusion }}"
+            echo "sonar.inclusions=${INCLUSION}" >> sonar-project.properties
+          fi
+          if ! [ ${{ inputs.sonar-exclusion }} ='' ]
+          then
+            EXCLUSION="${{ inputs.sonar-exclusion }}"
+            echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties
+          fi  
+          if ! [ ${{ inputs.cover-file-name }} ='' ]
+          then
+            COVER="${{ inputs.cover-file-name }}" 
+            echo "sonar.python.coverage.reportPaths=${COVER}" >> sonar-project.properties
+          fi
+          cat sonar-project.properties
+      - id: php-unit-test
+        name: PHP unit test and coverage
+        uses: docker://alpine:latest
+        kind: test
+        if: ${{ inputs.language == 'LANGUAGE_PHP' }} || ${{ inputs.language == 'PHP' }}
+        run: |
+          echo "sonar.language=php" >> sonar-project.properties
+          if ! [ ${{ inputs.sonar-inclusion }} ='' ]
+          then
+            INCLUSION="${{ inputs.sonar-inclusion }}"
+            echo "sonar.inclusions=${INCLUSION}" >> sonar-project.properties
+          fi
+          if ! [ ${{ inputs.sonar-exclusion }} ='' ]
+          then
+            EXCLUSION="${{ inputs.sonar-exclusion }}"
+            echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties
+          fi
+          if ! [ ${{ inputs.cover-file-name }} ='' ]
+          then
+            COVER="${{ inputs.cover-file-name }}" 
+            echo "sonar.php.coverage.reportPaths=${COVER}" >> sonar-project.properties
+          fi
+          cat sonar-project.properties
       - id: sonarqube
         name: sonarqube        
         uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-f2c65e317c97eb43dfb15715a37ed701dd1ab6c1
