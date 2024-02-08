@@ -4,16 +4,20 @@ name: sonarqube-bundled
 description: 'Build and scan repository'
 
 inputs:
-  run-unit-test:
-    description: 'Flag to indicate if unit tests should be run'
-    required: true
-    default: "false"
   language:
     description: 'Input to identify the language'
     required: true
     default: "true"
   cover-file-name:
     description: 'Coverage file path'
+    required: false
+    default: ""
+  sonar-inclusion:
+    description: 'Sonarqube Inclusion'
+    required: false
+    default: ""
+  sonar-exclusion:
+    description: 'Sonarqube Exclusion'
     required: false
     default: ""
 
