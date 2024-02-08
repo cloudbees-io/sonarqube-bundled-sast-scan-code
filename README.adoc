@@ -73,7 +73,7 @@ In your YAML file, add:
       - name: Scan with SonarQube bundled
         uses: cloudbees-io/sonarqube-bundled-sast-scan-code@v1
         with:
-          run-unit-test: false
+          sonar-exclusion: sonar/*
           cover-file-name: coverage.xml
           language: LANGUAGE_PYTHON
 ----
