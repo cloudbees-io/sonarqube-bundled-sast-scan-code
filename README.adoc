@@ -36,7 +36,7 @@ NOTE: If you already are running a centralized SonarQube, use the link:https://g
 
 | `language`
 | String
-| No
+| Yes
 | The language of your Git repository code base.
 Refer to <<_supported_languages>>.
 
@@ -55,12 +55,17 @@ Refer to <<_supported_languages>>.
 | Go
 | `LANGUAGE_GO`
 
+| Java
+| `LANGUAGE_JAVA`
+
 | JavaScript
 | `LANGUAGE_JS`
 
+| PHP
+| `LANGUAGE_PHP`
+
 | Python
 | `LANGUAGE_PYTHON`
-
 |===
 
 == Usage example
@@ -74,7 +79,7 @@ In your YAML file, add:
         uses: cloudbees-io/sonarqube-bundled-sast-scan-code@v1
         with:
           sonar-exclusion: sonar/*
-          cover-file-name: coverage.xml
+          cover-file-name: ./coverage.xml
           language: LANGUAGE_PYTHON
 ----
 
