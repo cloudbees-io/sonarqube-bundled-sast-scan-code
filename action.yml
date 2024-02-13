@@ -5,9 +5,8 @@ description: 'Build and scan repository'
 
 inputs:
   language:
-    description: 'Input to identify the language'
+    description: 'Programming Language'
     required: true
-    default: "true"
   cover-file-name:
     description: 'Coverage file path'
     required: false
@@ -24,132 +23,49 @@ inputs:
 runs:
   using: composite
   steps:
-      - id: git-credentials
-        name: Setup git credentials.
-        uses: https://github.com/cloudbees-io/configure-git-global-credentials@v1
-      - id: preprocessing
-        name: validating the inputs
+      - id: sonarqube-bundled-preprocess
+        name: sonarqube-bundled preprocessor
         uses: docker://alpine:latest
         run: |
           COVER="${{ inputs.cover-file-name }}"
           if ! test -f ${COVER} ;then
-            echo "Unable to locate Coverage file in Cloudbees_Workspace, Running Sonarqube Without Coverage Data..."
+           echo "Unable to locate Coverage file in Cloudbees_Workspace, Running Sonarqube Without Coverage Data..."
+          else
+            LANGUAGE="${{ inputs.language }}"            
+            if ! [ ${{ inputs.sonar-inclusion }} ='' ] 
+            then
+              INCLUSION="${{ inputs.sonar-inclusion }}"
+              echo "sonar.inclusions=${INCLUSION}" >> sonar-project.properties
+            fi
+            if ! [ ${{ inputs.sonar-exclusion }} ='' ]
+            then
+              EXCLUSION="${{ inputs.sonar-exclusion }}"
+              echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties
+            fi
+            if ! [ ${{ inputs.cover-file-name }} ='' ]
+            then              
+              if [ "$LANGUAGE" = LANGUAGE_GOLANG ] || [ "$LANGUAGE" = LANGUAGE_GO ] || [ "$LANGUAGE" = GOLANG ] || [ "$LANGUAGE" = GO ]; then
+                echo "sonar.go.coverage.reportPaths=${COVER}" >> sonar-project.properties              
+              elif [ "$LANGUAGE" = LANGUAGE_JAVASCRIPT ] || [ "$LANGUAGE" = LANGUAGE_JS ] || [ "$LANGUAGE" = JAVASCRIPT ] || [ "$LANGUAGE" = JS ]; then
+                echo "sonar.javascript.lcov.reportPaths=${COVER}" >> sonar-project.properties               
+              elif [ "$LANGUAGE" = LANGUAGE_JAVA ] || [ "$LANGUAGE" = JAVA ]; then
+                echo "sonar.language=java" >> sonar-project.properties
+                echo "sonar.java.binaries=./**" >> sonar-project.properties
+                echo "sonar.coverage.jacoco.xmlReportPaths=${COVER}" >> sonar-project.properties              
+              elif [ "$LANGUAGE" = LANGUAGE_PYTHON ] || [ "$LANGUAGE" = PYTHON ]; then
+                echo "sonar.python.coverage.reportPaths=${COVER}" >> sonar-project.properties             
+              elif [ "$LANGUAGE" = LANGUAGE_PHP ] || [ "$LANGUAGE" = PHP ]; then
+                echo "sonar.language=php" >> sonar-project.properties
+                echo "sonar.php.coverage.reportPaths=${COVER}" >> sonar-project.properties
+              else
+                echo "Currently not supporting ${LANGUAGE}, Running Sonarqube Without Coverage Data..."
+              fi
+              cat sonar-project.properties
+            fi
           fi
-      - id: golang-unit-test
-        name: Golang unit test and coverage
-        uses: docker://alpine:latest
-        kind: test
-        if: ${{ inputs.language == 'LANGUAGE_GOLANG' }} || ${{ inputs.language == 'GOLANG' }} || ${{ inputs.language == 'GO' }} 
-        run: |
-          if ! [ ${{ inputs.sonar-inclusion }} ='' ]
-          then
-            INCLUSION="${{ inputs.sonar-inclusion }}"
-            echo "sonar.inclusions=${INCLUSION}" >> sonar-project.properties
-          fi
-          if ! [ ${{ inputs.sonar-exclusion }} ='' ]
-          then
-            EXCLUSION="${{ inputs.sonar-exclusion }}"
-            echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties
-          fi
-          if ! [ ${{ inputs.cover-file-name }} ='' ]
-          then
-            COVER="${{ inputs.cover-file-name }}"
-            echo "sonar.go.coverage.reportPaths=${COVER}" >> sonar-project.properties
-          fi
-          cat sonar-project.properties
-      - id: java-unit-test
-        name: Java unit test and coverage
-        uses: docker://alpine:latest
-        if: ${{ inputs.language == 'LANGUAGE_JAVA' }} || ${{ inputs.language == 'JAVA' }}
-        run: |
-          echo "sonar.language=java" >> sonar-project.properties
-          echo "sonar.java.binaries=./**" >> sonar-project.properties
-          if ! [ ${{ inputs.sonar-inclusion }} ='' ]
-          then
-            INCLUSION="${{ inputs.sonar-inclusion }}"
-            echo "sonar.inclusions=${INCLUSION}" >> sonar-project.properties
-          fi
-          if ! [ ${{ inputs.sonar-exclusion }} ='' ]
-          then
-            EXCLUSION="${{ inputs.sonar-exclusion }}"
-            echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties
-          fi
-          if ! [ ${{ inputs.cover-file-name }} ='' ]
-          then
-            COVER="${{ inputs.cover-file-name }}"
-            echo "sonar.coverage.jacoco.xmlReportPaths=${COVER}" >> sonar-project.properties
-          fi
-          cat sonar-project.properties
-      - id: javascript-unit-test
-        name: Javascript unit test and coverage
-        uses: docker://alpine:latest
-        kind: test
-        if: ${{ inputs.language == 'LANGUAGE_JAVASCRIPT' }} || ${{ inputs.language == 'JAVASCRIPT' }} || ${{ inputs.language == 'JS' }}
-        run: |
-          if ! [ ${{ inputs.sonar-inclusion }} ='' ]
-          then
-            INCLUSION="${{ inputs.sonar-inclusion }}"
-            echo "sonar.test.inclusions=${INCLUSION}" >> sonar-project.properties
-          fi
-          if ! [ ${{ inputs.sonar-exclusion }} ='' ]
-          then
-            EXCLUSION="${{ inputs.sonar-exclusion }}"
-            echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties  
-          fi
-          if ! [ ${{ inputs.cover-file-name }} ='' ]
-          then
-            COVER="${{ inputs.cover-file-name }}"
-            echo "sonar.javascript.lcov.reportPaths=${COVER}" >> sonar-project.properties
-          fi
-          cat sonar-project.properties  
-      - id: python-unit-test
-        name: Python unit test and coverage
-        uses: docker://alpine:latest
-        kind: test
-        if: ${{ inputs.language == 'LANGUAGE_PYTHON' }} || ${{ inputs.language == 'PYTHON' }}
-        run: |
-          if ! [ ${{ inputs.sonar-inclusion }} ='' ]
-          then
-            INCLUSION="${{ inputs.sonar-inclusion }}"
-            echo "sonar.inclusions=${INCLUSION}" >> sonar-project.properties
-          fi
-          if ! [ ${{ inputs.sonar-exclusion }} ='' ]
-          then
-            EXCLUSION="${{ inputs.sonar-exclusion }}"
-            echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties
-          fi  
-          if ! [ ${{ inputs.cover-file-name }} ='' ]
-          then
-            COVER="${{ inputs.cover-file-name }}" 
-            echo "sonar.python.coverage.reportPaths=${COVER}" >> sonar-project.properties
-          fi
-          cat sonar-project.properties
-      - id: php-unit-test
-        name: PHP unit test and coverage
-        uses: docker://alpine:latest
-        kind: test
-        if: ${{ inputs.language == 'LANGUAGE_PHP' }} || ${{ inputs.language == 'PHP' }}
-        run: |
-          echo "sonar.language=php" >> sonar-project.properties
-          if ! [ ${{ inputs.sonar-inclusion }} ='' ]
-          then
-            INCLUSION="${{ inputs.sonar-inclusion }}"
-            echo "sonar.inclusions=${INCLUSION}" >> sonar-project.properties
-          fi
-          if ! [ ${{ inputs.sonar-exclusion }} ='' ]
-          then
-            EXCLUSION="${{ inputs.sonar-exclusion }}"
-            echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties
-          fi
-          if ! [ ${{ inputs.cover-file-name }} ='' ]
-          then
-            COVER="${{ inputs.cover-file-name }}" 
-            echo "sonar.php.coverage.reportPaths=${COVER}" >> sonar-project.properties
-          fi
-          cat sonar-project.properties
       - id: sonarqube
-        name: sonarqube        
-        uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-f2c65e317c97eb43dfb15715a37ed701dd1ab6c1
+        name: sonarqube       
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-8b706cda63c46e69b538b3a9976cde619dc0ea82 
         shell: bash
         env:
           RUN_ID: ${{ cloudbees.run_id }}
