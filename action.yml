@@ -6,8 +6,7 @@ description: 'Build and scan repository'
 inputs:
   language:
     description: 'Programming Language'
-    required: false
-    default: "LANGUAGE_GO"
+    required: true
   cover-file-name:
     description: 'Coverage file path'
     required: false
