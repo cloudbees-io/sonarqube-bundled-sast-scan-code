@@ -27,6 +27,7 @@ runs:
         name: sonarqube-bundled preprocessor
         uses: docker://alpine:latest
         run: |
+          echo "Preprocessing Customer's data for bundled Sonarqube action..."
           COVER="${{ inputs.cover-file-name }}"
           if ! test -f ${COVER} ;then
            echo "Unable to locate Coverage file in Cloudbees_Workspace, Running Sonarqube Without Coverage Data..."
@@ -57,10 +58,14 @@ runs:
               elif [ "$LANGUAGE" = LANGUAGE_PHP ] || [ "$LANGUAGE" = PHP ]; then
                 echo "sonar.language=php" >> sonar-project.properties
                 echo "sonar.php.coverage.reportPaths=${COVER}" >> sonar-project.properties
+              elif [ "$LANGUAGE" = LANGUAGE_RUBY ] || [ "$LANGUAGE" = RUBY ]; then
+                echo "sonar.ruby.coverage.reportPaths=${COVER}" >> sonar-project.properties
               else
                 echo "Currently not supporting ${LANGUAGE}, Running Sonarqube Without Coverage Data..."
               fi
               cat sonar-project.properties
+            else
+              echo "Cover-file is not provided, Running bundled Sonarqube action..."
             fi
           fi
       - id: sonarqube
