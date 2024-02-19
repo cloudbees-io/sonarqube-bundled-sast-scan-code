@@ -66,6 +66,9 @@ Refer to <<_supported_languages>>.
 
 | Python
 | `LANGUAGE_PYTHON`
+
+| Ruby
+| `LANGUAGE_RUBY`
 |===
 
 == Usage example
@@ -76,7 +79,7 @@ In your YAML file, add:
 ----
 
       - name: Scan with SonarQube bundled
-        uses: cloudbees-io/sonarqube-bundled-sast-scan-code@v1
+        uses: cloudbees-io/sonarqube-bundled-sast-scan-code@v2
         with:
           sonar-exclusion: sonar/*
           cover-file-name: ./coverage.xml
