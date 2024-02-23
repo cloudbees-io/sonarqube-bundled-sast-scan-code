@@ -60,6 +60,8 @@ runs:
                 echo "sonar.php.coverage.reportPaths=${COVER}" >> sonar-project.properties
               elif [ "$LANGUAGE" = LANGUAGE_RUBY ] || [ "$LANGUAGE" = RUBY ]; then
                 echo "sonar.ruby.coverage.reportPaths=${COVER}" >> sonar-project.properties
+              elif [ "$LANGUAGE" = LANGUAGE_DOTNET ] || [ "$LANGUAGE" = DOTNET ]; then
+                echo "sonar.cs.opencover.reportsPaths=${COVER}" >> sonar-project.properties
               else
                 echo "Currently not supporting ${LANGUAGE}, Running Sonarqube Without Coverage Data..."
               fi
