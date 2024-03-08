@@ -72,9 +72,10 @@ runs:
           fi
       - id: sonarqube
         name: sonarqube       
-        uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-8b706cda63c46e69b538b3a9976cde619dc0ea82 
+        uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-aeba0eb3aab0416395768fc885f669bc266c3291 
         shell: bash
         env:
+          LANGUAGE: ${{ inputs.language }}
           RUN_ID: ${{ cloudbees.run_id }}
           JOB_ID: ${{ job.id }}
           STEP_ID: ${{ step.internal.id }}
