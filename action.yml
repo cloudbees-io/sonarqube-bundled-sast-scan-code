@@ -1,94 +1,103 @@
 apiVersion: automation.cloudbees.io/v1alpha1
 kind: action
 name: sonarqube-bundled
-description: 'Build and scan repository'
+description: "Build and scan repository"
 
 inputs:
   language:
-    description: 'Programming Language'
+    description: "Programming Language"
     required: true
+  log-level:
+    description: "Log level"
+    required: false
+    default: "INFO"
   cover-file-name:
-    description: 'Coverage file path'
+    description: "Coverage file path"
     required: false
     default: ""
   sonar-inclusion:
-    description: 'Sonarqube Inclusion'
+    description: "SonarQube Inclusion"
     required: false
     default: ""
   sonar-exclusion:
-    description: 'Sonarqube Exclusion'
+    description: "SonarQube Exclusion"
     required: false
     default: ""
 
 runs:
   using: composite
   steps:
-      - id: sonarqube-bundled-preprocess
-        name: sonarqube-bundled preprocessor
-        uses: docker://alpine:latest
-        run: |
-          echo "Preprocessing Customer's data for bundled Sonarqube action..."
-          COVER="${{ inputs.cover-file-name }}"
-          if ! test -f ${COVER} ;then
-           echo "Unable to locate Coverage file in Cloudbees_Workspace, Running Sonarqube Without Coverage Data..."
-          else
-            LANGUAGE="${{ inputs.language }}"            
-            if ! [ ${{ inputs.sonar-inclusion }} ='' ] 
-            then
-              INCLUSION="${{ inputs.sonar-inclusion }}"
-              echo "sonar.inclusions=${INCLUSION}" >> sonar-project.properties
-            fi
-            if ! [ ${{ inputs.sonar-exclusion }} ='' ]
-            then
-              EXCLUSION="${{ inputs.sonar-exclusion }}"
-              echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties
-            fi
-            if ! [ ${{ inputs.cover-file-name }} ='' ]
-            then              
-              if [ "$LANGUAGE" = LANGUAGE_GOLANG ] || [ "$LANGUAGE" = LANGUAGE_GO ] || [ "$LANGUAGE" = GOLANG ] || [ "$LANGUAGE" = GO ]; then
-                echo "sonar.go.coverage.reportPaths=${COVER}" >> sonar-project.properties              
-              elif [ "$LANGUAGE" = LANGUAGE_JAVASCRIPT ] || [ "$LANGUAGE" = LANGUAGE_JS ] || [ "$LANGUAGE" = JAVASCRIPT ] || [ "$LANGUAGE" = JS ]; then
-                echo "sonar.javascript.lcov.reportPaths=${COVER}" >> sonar-project.properties               
-              elif [ "$LANGUAGE" = LANGUAGE_JAVA ] || [ "$LANGUAGE" = JAVA ]; then
-                echo "sonar.language=java" >> sonar-project.properties
-                echo "sonar.java.binaries=./**" >> sonar-project.properties
-                echo "sonar.coverage.jacoco.xmlReportPaths=${COVER}" >> sonar-project.properties              
-              elif [ "$LANGUAGE" = LANGUAGE_PYTHON ] || [ "$LANGUAGE" = PYTHON ]; then
-                echo "sonar.python.coverage.reportPaths=${COVER}" >> sonar-project.properties             
-              elif [ "$LANGUAGE" = LANGUAGE_PHP ] || [ "$LANGUAGE" = PHP ]; then
-                echo "sonar.language=php" >> sonar-project.properties
-                echo "sonar.php.coverage.reportPaths=${COVER}" >> sonar-project.properties
-              elif [ "$LANGUAGE" = LANGUAGE_RUBY ] || [ "$LANGUAGE" = RUBY ]; then
-                echo "sonar.ruby.coverage.reportPaths=${COVER}" >> sonar-project.properties
-              elif [ "$LANGUAGE" = LANGUAGE_DOTNET ] || [ "$LANGUAGE" = DOTNET ]; then
-                echo "sonar.cs.opencover.reportsPaths=${COVER}" >> sonar-project.properties
-              else
-                echo "Currently not supporting ${LANGUAGE}, Running Sonarqube Without Coverage Data..."
-              fi
-              cat sonar-project.properties
-            else
-              echo "Cover-file is not provided, Running bundled Sonarqube action..."
-            fi
+    - id: sonarqube-bundled-preprocess
+      name: sonarqube-bundled preprocessor
+      uses: docker://alpine:latest
+      run: |
+        echo "Preprocessing Customer's data for bundled SonarQube action..."
+        COVER="${{ inputs.cover-file-name }}"
+        if ! test -f ${COVER} ;then
+         echo "Unable to locate Coverage file in Cloudbees_Workspace, Running SonarQube Without Coverage Data..."
+        else
+          LANGUAGE="${{ inputs.language }}"
+          LOG_LEVEL="${{ inputs.log-level }}"            
+
+          if ! [ ${{ inputs.sonar-inclusion }} ='' ] 
+          then
+            INCLUSION="${{ inputs.sonar-inclusion }}"
+            echo "sonar.inclusions=${INCLUSION}" >> sonar-project.properties
           fi
-      - id: sonarqube
-        name: sonarqube       
-        uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-aeba0eb3aab0416395768fc885f669bc266c3291 
-        shell: bash
-        env:
-          LANGUAGE: ${{ inputs.language }}
-          RUN_ID: ${{ cloudbees.run_id }}
-          JOB_ID: ${{ job.id }}
-          STEP_ID: ${{ step.internal.id }}
-          DNS_URL: ${{ cloudbees.api.url }}
-          JWT_TOKEN: ${{ cloudbees.api.token }}
-          CONFIG_JSON: '{"actor":"SCM-Bot","tenent_info":"default_tenant","asset_uuid":"c6cef160-c0b3-43a4-bda1-53ab484cc9da","profile_uuid":"profile-uuid-1","asset_identifier":"${{ cloudbees.scm.repositoryUrl }}","profile_identifier":"${{ cloudbees.scm.branch }}"}'
-        run: |
-          set -x
-          cd /
-          echo "RUN ID: ${{ cloudbees.run_id }}"
-          echo "Job ID: ${{ job.id }}"
-          echo "Step ID: ${{ step.internal.id }}"
-          echo "DNS URL: ${{ cloudbees.api.url }}"
-          echo "JWT TOKEN: ${{ cloudbees.api.token }}"
-          cd $CLOUDBEES_WORKSPACE
-          /bin/bash -c "/usr/local/bin/scan.sh"
+          if [ "$LOG_LEVEL" = INFO ] || [ "$LOG_LEVEL" = DEBUG ] || [ "$LOG_LEVEL" = TRACE ]; then
+            echo "sonar.log.level=${LOG_LEVEL}" >> sonar-project.properties
+          fi
+          if ! [ ${{ inputs.sonar-exclusion }} ='' ]
+          then
+            EXCLUSION="${{ inputs.sonar-exclusion }}"
+            echo "sonar.exclusions=${EXCLUSION}" >> sonar-project.properties
+          fi
+          if ! [ ${{ inputs.cover-file-name }} ='' ]
+          then              
+            if [ "$LANGUAGE" = LANGUAGE_GOLANG ] || [ "$LANGUAGE" = LANGUAGE_GO ] || [ "$LANGUAGE" = GOLANG ] || [ "$LANGUAGE" = GO ]; then
+              echo "sonar.go.coverage.reportPaths=${COVER}" >> sonar-project.properties              
+            elif [ "$LANGUAGE" = LANGUAGE_JAVASCRIPT ] || [ "$LANGUAGE" = LANGUAGE_JS ] || [ "$LANGUAGE" = JAVASCRIPT ] || [ "$LANGUAGE" = JS ]; then
+              echo "sonar.javascript.lcov.reportPaths=${COVER}" >> sonar-project.properties               
+            elif [ "$LANGUAGE" = LANGUAGE_JAVA ] || [ "$LANGUAGE" = JAVA ]; then
+              echo "sonar.language=java" >> sonar-project.properties
+              echo "sonar.java.binaries=./**" >> sonar-project.properties
+              echo "sonar.coverage.jacoco.xmlReportPaths=${COVER}" >> sonar-project.properties              
+            elif [ "$LANGUAGE" = LANGUAGE_PYTHON ] || [ "$LANGUAGE" = PYTHON ]; then
+              echo "sonar.python.coverage.reportPaths=${COVER}" >> sonar-project.properties             
+            elif [ "$LANGUAGE" = LANGUAGE_PHP ] || [ "$LANGUAGE" = PHP ]; then
+              echo "sonar.language=php" >> sonar-project.properties
+              echo "sonar.php.coverage.reportPaths=${COVER}" >> sonar-project.properties
+            elif [ "$LANGUAGE" = LANGUAGE_RUBY ] || [ "$LANGUAGE" = RUBY ]; then
+              echo "sonar.ruby.coverage.reportPaths=${COVER}" >> sonar-project.properties
+            elif [ "$LANGUAGE" = LANGUAGE_DOTNET ] || [ "$LANGUAGE" = DOTNET ]; then
+              echo "sonar.cs.opencover.reportsPaths=${COVER}" >> sonar-project.properties
+            else
+              echo "Currently not supporting ${LANGUAGE}, Running Sonarqube Without Coverage Data..."
+            fi
+            cat sonar-project.properties
+          else
+            echo "Cover-file is not provided, Running bundled SonarQube action..."
+          fi
+        fi
+    - id: sonarqube
+      name: sonarqube
+      uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-aeba0eb3aab0416395768fc885f669bc266c3291
+      shell: bash
+      env:
+        LANGUAGE: ${{ inputs.language }}
+        RUN_ID: ${{ cloudbees.run_id }}
+        JOB_ID: ${{ job.id }}
+        STEP_ID: ${{ step.internal.id }}
+        DNS_URL: ${{ cloudbees.api.url }}
+        JWT_TOKEN: ${{ cloudbees.api.token }}
+        CONFIG_JSON: '{"actor":"SCM-Bot","tenent_info":"default_tenant","asset_uuid":"c6cef160-c0b3-43a4-bda1-53ab484cc9da","profile_uuid":"profile-uuid-1","asset_identifier":"${{ cloudbees.scm.repositoryUrl }}","profile_identifier":"${{ cloudbees.scm.branch }}"}'
+      run: |
+        set -x
+        cd /
+        echo "RUN ID: ${{ cloudbees.run_id }}"
+        echo "Job ID: ${{ job.id }}"
+        echo "Step ID: ${{ step.internal.id }}"
+        echo "DNS URL: ${{ cloudbees.api.url }}"
+        echo "JWT TOKEN: ${{ cloudbees.api.token }}"
+        cd $CLOUDBEES_WORKSPACE
+        /bin/bash -c "/usr/local/bin/scan.sh"
