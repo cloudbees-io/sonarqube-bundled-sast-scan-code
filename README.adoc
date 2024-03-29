@@ -42,7 +42,7 @@ Refer to <<_supported_languages>>.
 
 | `log-level`
 | String
-| Yes
+| No
 | Log level. Can be `INFO`, `DEBUG`, or `TRACE`.
 
 |===
