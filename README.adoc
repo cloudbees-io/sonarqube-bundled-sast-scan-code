@@ -40,6 +40,11 @@ NOTE: If you already are running a centralized SonarQube, use the link:https://g
 | The language of your Git repository code base.
 Refer to <<_supported_languages>>.
 
+| `log-level`
+| String
+| No
+| Log level. Can be `INFO`, `DEBUG`, or `TRACE`.
+
 |===
 
 [#_supported_languages]
