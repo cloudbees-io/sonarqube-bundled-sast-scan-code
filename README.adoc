@@ -119,7 +119,7 @@ In your YAML file, add:
           language: LANGUAGE_PYTHON
 ----
 
-In the following example, if there are any critical, very high or high severity vulnerabilities identified, the build is broken.
+In the following example, if there are any critical, very high, high, medium or low severity vulnerabilities identified, the build is broken.
 
 [source,yaml]
 ----
@@ -132,6 +132,8 @@ In the following example, if there are any critical, very high or high severity 
           threshold-critical: 0
           threshold-very-high: 0
           threshold-high: 0
+          threshold-medium: 0
+          threshold-low: 0
 ----
 
 == License
