@@ -23,6 +23,26 @@ inputs:
     description: "SonarQube Exclusion"
     required: false
     default: ""
+  threshold-critical:
+    required: false
+    default: 999
+    description: 'The threshold for critical severity. Build will be broken if vulnerabilities with critical severity exceeds this threshold.'
+  threshold-very-high:
+    required: false
+    default: 999
+    description: 'The threshold for very high severity. Build will be broken if vulnerabilities with very high severity exceeds this threshold.'
+  threshold-high:
+    required: false
+    default: 999
+    description: 'The threshold for high severity. Build will be broken if vulnerabilities with high severity exceeds this threshold.'
+  threshold-medium:
+    required: false
+    default: 999
+    description: 'The threshold for medium severity. Build will be broken if vulnerabilities with medium severity exceeds this threshold.'
+  threshold-low:
+    required: false
+    default: 999  
+    description: 'The threshold for low severity. Build will be broken if vulnerabilities with low severity exceeds this threshold.'
 
 runs:
   using: composite
@@ -81,7 +101,7 @@ runs:
         fi
     - id: sonarqube
       name: sonarqube
-      uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-1c3a99e3afda6bdd0733a34e1aea4730cd7a9337
+      uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-b161cbe2a2484eb4f5d3e3e6565bb7f24929925f
       shell: bash
       env:
         LANGUAGE: ${{ inputs.language }}
@@ -91,6 +111,7 @@ runs:
         DNS_URL: ${{ cloudbees.api.url }}
         JWT_TOKEN: ${{ cloudbees.api.token }}
         CONFIG_JSON: '{"actor":"SCM-Bot","tenent_info":"default_tenant","asset_uuid":"c6cef160-c0b3-43a4-bda1-53ab484cc9da","profile_uuid":"profile-uuid-1","asset_identifier":"${{ cloudbees.scm.repositoryUrl }}","profile_identifier":"${{ cloudbees.scm.branch }}"}'
+        THRESHOLD_JSON: '{"critical":${{ inputs.threshold-critical }},"veryHigh":${{ inputs.threshold-very-high }},"high":${{ inputs.threshold-high }},"medium":${{ inputs.threshold-medium }},"low":${{ inputs.threshold-low }}}'
       run: |
         set -x
         cd /
