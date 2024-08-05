@@ -43,7 +43,15 @@ inputs:
     required: false
     default: 999  
     description: 'The threshold for low severity. Build will be broken if vulnerabilities with low severity exceeds this threshold.'
-
+  assert-url:
+    description: "Assert URL"
+    required: false
+    default: "${{ cloudbees.scm.repositoryUrl }}"
+  assert-branch:
+    description: "Assert Branch"
+    required: false
+    default: "${{ cloudbees.scm.branch }}"
+    
 runs:
   using: composite
   steps:
@@ -110,7 +118,7 @@ runs:
         STEP_ID: ${{ step.internal.id }}
         DNS_URL: ${{ cloudbees.api.url }}
         JWT_TOKEN: ${{ cloudbees.api.token }}
-        CONFIG_JSON: '{"actor":"SCM-Bot","tenent_info":"default_tenant","asset_uuid":"c6cef160-c0b3-43a4-bda1-53ab484cc9da","profile_uuid":"profile-uuid-1","asset_identifier":"${{ cloudbees.scm.repositoryUrl }}","profile_identifier":"${{ cloudbees.scm.branch }}"}'
+        CONFIG_JSON: '{"actor":"SCM-Bot","tenent_info":"default_tenant","asset_uuid":"c6cef160-c0b3-43a4-bda1-53ab484cc9da","profile_uuid":"profile-uuid-1","asset_identifier":"${{ inputs.assert-url }}","profile_identifier":"${{ inputs.assert-branch }}"}'
         THRESHOLD_JSON: '{"critical":${{ inputs.threshold-critical }},"veryHigh":${{ inputs.threshold-very-high }},"high":${{ inputs.threshold-high }},"medium":${{ inputs.threshold-medium }},"low":${{ inputs.threshold-low }}}'
       run: |
         set -x
