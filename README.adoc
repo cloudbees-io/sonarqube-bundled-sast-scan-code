@@ -48,27 +48,58 @@ Refer to <<_supported_languages>>.
 | `threshold-critical`
 | integer
 | No
-| The number threshold of critical severity vulnerabilities at which the build is broken.
+| The maximum number of Critical severity security findings, if exceeded, the build will fail. For example, when the threshold value is set to 2, the build fails if the number of Critical severity security findings exceeds 2.
 
 | `threshold-very-high`
 | integer
 | No
-| The number threshold of very high severity vulnerabilities at which the build is broken.
+| The maximum number of Very High severity security findings, if exceeded, the build will fail. For example, when the threshold value is set to 2, the build fails if the number of Very High severity security findings exceeds 2.
 
 | `threshold-high`
 | integer
 | No
-| The number threshold of high severity vulnerabilities at which the build is broken.
+| The maximum number of High severity security findings, if exceeded, the build will fail. For example, when the threshold value is set to 2, the build fails if the number of High severity security findings exceeds 2.
 
 | `threshold-medium`
 | integer
 | No
-| The number threshold of medium severity vulnerabilities at which the build is broken.
+| The maximum number of Medium severity security findings, if exceeded, the build will fail. For example, when the threshold value is set to 2, the build fails if the number of Medium severity security findings exceeds 2.
 
 | `threshold-low`
 | integer
 | No
-| The number threshold of low severity vulnerabilities at which the build is broken.
+| The maximum number of Low severity security findings, if exceeded, the build will fail. For example, when the threshold value is set to 2, the build fails if the number of Low severity security findings exceeds 2.
+|===
+
+== Outputs
+
+[cols="2a,1a,3a",options="header"]
+.Output details
+|===
+
+| Output name
+| Data type
+| Description
+
+| `critical-count`
+| String
+| A string containing the number of Critical security findings discovered during the scan.
+
+| `very-high-count`
+| String
+| A string containing the number of Very High security findings discovered during the scan.
+
+| `high-count`
+| String
+| A string containing the number of High security findings discovered during the scan.
+
+| `medium-count`
+| String
+| A string containing the number of Medium security findings discovered during the scan.
+
+| `low-count`
+| String
+| A string containing the number of Low security findings discovered during the scan.
 
 |===
 
@@ -119,7 +150,7 @@ In your YAML file, add:
           language: LANGUAGE_PYTHON
 ----
 
-In the following example, if there are any critical, very high, high, medium or low severity vulnerabilities identified, the build is broken.
+In the following example, the threshold values for Critical, Very High, High, Medium, and Low severity security findings are set to 0. Therefore, the build breaks if at least one Critical, Very High, High, Medium, or Low severity security finding is identified.
 
 [source,yaml]
 ----
@@ -134,6 +165,55 @@ In the following example, if there are any critical, very high, high, medium or 
           threshold-high: 0
           threshold-medium: 0
           threshold-low: 0
+----
+
+=== Using outputs from SonarQube
+
+As an example, the following workflow prints the count for each severity, in subsequent steps and jobs, for the security findings discovered during the SonarQube scan triggered from the action:
+
+[source,yaml,role="default-expanded"]
+----
+jobs:
+  Your-SonarQube-Job:
+    outputs:
+      your-sonarqube-job-output-critical: ${{ steps.your-sonarqube-step.outputs.critical-count }}
+      your-sonarqube-job-output-very-high: ${{ steps.your-sonarqube-step.outputs.very-high-count }}
+      your-sonarqube-job-output-high: ${{ steps.your-sonarqube-step.outputs.high-count }}
+      your-sonarqube-job-output-medium: ${{ steps.your-sonarqube-step.outputs.medium-count }}
+      your-sonarqube-job-output-low: ${{ steps.your-sonarqube-step.outputs.low-count }}
+    steps:
+      - id: your-sonarqube-step
+        name: Run step with SonarQube Bundled action
+        uses: cloudbees-io/sonarqube-bundled-sast-scan-code@v2
+        with:
+          language: LANGUAGE_PYTHON
+
+      - id: print-outputs-from-your-sonarqube-step
+        name: Print outputs from upstream SonarQube step
+        uses: docker://alpine:latest
+        run: |
+            #printing all outputs
+            echo "Outputs from upstream SonarQube step:"
+            echo "Critical Count: ${{steps.your-sonarqube-step.outputs.critical-count}}"
+            echo "Very High Count: ${{steps.your-sonarqube-step.outputs.very-high-count}}"
+            echo "High Count: ${{steps.your-sonarqube-step.outputs.high-count}}"
+            echo "Medium Count: ${{steps.your-sonarqube-step.outputs.medium-count}}"
+            echo "Low Count: ${{steps.your-sonarqube-step.outputs.low-count}}"
+
+  Print-Outputs-From-Your-SonarQube-Job:
+    needs: [Your-SonarQube-Job]
+    steps:
+      - id: print-outputs-from-your-sonarqube-job
+        name: Print outputs from upstream SonarQube job
+        uses: docker://alpine:latest
+        run: |
+            #printing all outputs
+            echo "Outputs from upstream SonarQube job:"
+            echo "Critical Count: ${{needs.Your-SonarQube-Job.outputs.your-sonarqube-job-output-critical}}"
+            echo "Very High Count: ${{needs.Your-SonarQube-Job.outputs.your-sonarqube-job-output-very-high}}"
+            echo "High Count: ${{needs.Your-SonarQube-Job.outputs.your-sonarqube-job-output-high}}"
+            echo "Medium Count: ${{needs.Your-SonarQube-Job.outputs.your-sonarqube-job-output-medium}}"
+            echo "Low Count: ${{needs.Your-SonarQube-Job.outputs.your-sonarqube-job-output-low}}"
 ----
 
 == License
