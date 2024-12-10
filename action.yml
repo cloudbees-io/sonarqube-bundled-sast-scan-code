@@ -26,23 +26,23 @@ inputs:
   threshold-critical:
     required: false
     default: 999
-    description: 'The threshold for critical severity. Build will be broken if vulnerabilities with critical severity exceeds this threshold.'
+    description: 'The maximum number of Critical severity security findings, if exceeded, the build will fail'
   threshold-very-high:
     required: false
     default: 999
-    description: 'The threshold for very high severity. Build will be broken if vulnerabilities with very high severity exceeds this threshold.'
+    description: 'The maximum number of Very High severity security findings, if exceeded, the build will fail'
   threshold-high:
     required: false
     default: 999
-    description: 'The threshold for high severity. Build will be broken if vulnerabilities with high severity exceeds this threshold.'
+    description: 'The maximum number of High severity security findings, if exceeded, the build will fail'
   threshold-medium:
     required: false
     default: 999
-    description: 'The threshold for medium severity. Build will be broken if vulnerabilities with medium severity exceeds this threshold.'
+    description: 'The maximum number of Medium severity security findings, if exceeded, the build will fail'
   threshold-low:
     required: false
     default: 999  
-    description: 'The threshold for low severity. Build will be broken if vulnerabilities with low severity exceeds this threshold.'
+    description: 'The maximum number of Low severity security findings, if exceeded, the build will fail'
   assert-url:
     description: "Assert URL"
     required: false
@@ -51,6 +51,23 @@ inputs:
     description: "Assert Branch"
     required: false
     default: "${{ cloudbees.scm.branch }}"
+
+outputs:
+  critical-count:
+    description: A string containing the number of Critical security findings discovered during the scan.
+    value: ${{steps.sonarqube.outputs.critical-count}}
+  very-high-count:
+    description: A string containing the number of Very High security findings discovered during the scan.
+    value: ${{steps.sonarqube.outputs.very-high-count}}
+  high-count:
+    description: A string containing the number of High security findings discovered during the scan.
+    value: ${{steps.sonarqube.outputs.high-count}}
+  medium-count:
+    description: A string containing the number of Medium security findings discovered during the scan.
+    value: ${{steps.sonarqube.outputs.medium-count}}
+  low-count:
+    description: A string containing the number of Low security findings discovered during the scan.
+    value: ${{steps.sonarqube.outputs.low-count}}
     
 runs:
   using: composite
@@ -109,7 +126,7 @@ runs:
         fi
     - id: sonarqube
       name: sonarqube
-      uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-7303573a88f74986d3cc3e6dc15e7646b4cc1f1a
+      uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-b2ed310c3b67377b4a78f0630a1c759739980848
       shell: bash
       env:
         LANGUAGE: ${{ inputs.language }}
