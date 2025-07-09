@@ -126,7 +126,7 @@ runs:
         fi
     - id: sonarqube
       name: sonarqube
-      uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-bc090576fc33eda7fec9a38c918b2194f96c3ab3
+      uses: docker://public.ecr.aws/l7o7z1g8/actions/bundled-sonarqube-sast-actions:main-abd1d4d4ea3244b3bb4efcc5acb050409fcf6e98
       shell: bash
       env:
         LANGUAGE: ${{ inputs.language }}
